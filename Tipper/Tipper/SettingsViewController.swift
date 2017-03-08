@@ -10,13 +10,19 @@ import UIKit
 
 class SettingsViewController: UIViewController {
 
+    @IBOutlet var MainView: UIView!
     @IBOutlet weak var defaultTipPercent: UISegmentedControl!
     let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
         defaultTipPercent.selectedSegmentIndex = defaults.integer(forKey: "defaultVal")
+        defaults.set(27, forKey: "Visited")
         // Do any additional setup after loading the view.
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        self.MainView.backgroundColor = UIColor(red: 255/255.0, green: 253/255.0, blue: 194/255.0, alpha: 1.0)
     }
 
     override func didReceiveMemoryWarning() {
