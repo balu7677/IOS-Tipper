@@ -107,11 +107,16 @@ class ViewController: UIViewController, UITextFieldDelegate {
         let bill = Double(billBoxLabel.text!) ?? 0
         defaults.set(bill, forKey: "Bill")
         defaults.set(Date(), forKey: "Date")
-        numberFormatter.numberStyle = .decimal
+        numberFormatter.numberStyle = .currency
+        numberFormatter.locale = Locale.current
+        numberFormatter.maximumFractionDigits = 3
+        //numberFormatter.roundingMode = .down
         let tip = bill * ((self.customTip>0 && self.tipPercentLabel.selectedSegmentIndex == 3) ? (self.customTip) : (tipPercent[tipPercentLabel.selectedSegmentIndex]))
         let total = tip + bill
-        tipLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? String(format: "$%.2f", tip) : "$0.00"
-        totalLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? String(format: "$%.2f", total) : "$0.00"
+        tipLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? (numberFormatter.string(from: NSNumber(value: tip))!) : "$0.00"
+        totalLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? (numberFormatter.string(from: NSNumber(value: total))!) : "$0.00"
+      //  tipLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? String(format: "$%.2f", tip) : "$0.00"
+      //  totalLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? String(format: "$%.2f", total) : "$0.00"
        
         UIView.animate(withDuration: 0.2, animations: {
             // This causes first view to fade in and second view to fade out
@@ -147,8 +152,12 @@ class ViewController: UIViewController, UITextFieldDelegate {
         let bill = Double(billBoxLabel.text!) ?? 0
         let tip = bill * (self.customTip)
         let total = tip + bill
-        tipLabel.text = String(format: "$%.2f", tip)
-        totalLabel.text = String(format: "$%.2f", total)
+        numberFormatter.numberStyle = .currency
+        //numberFormatter.roundingMode = .down
+        numberFormatter.maximumFractionDigits = 3
+        numberFormatter.locale = Locale.current
+        tipLabel.text = numberFormatter.string(from: NSNumber(value: tip))!
+        totalLabel.text = numberFormatter.string(from: NSNumber(value: total))!
         
     }
     
