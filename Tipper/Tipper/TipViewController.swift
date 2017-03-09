@@ -14,12 +14,11 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var totalLabel: UILabel!
     @IBOutlet weak var tipPercentLabel: UISegmentedControl!
     @IBOutlet weak var billBoxLabel: UITextField!
-    let defaults = UserDefaults.standard
-    
     @IBOutlet weak var mainView: UIView!
     @IBOutlet weak var displayView: UIView!
     
-    let numberFormatter = NumberFormatter()
+    let defaults = UserDefaults.standard
+    var numberFormatter = NumberFormatter()
     var movedUp = true
     var movedDown = true
     var firstVisit = false
@@ -31,32 +30,30 @@ class ViewController: UIViewController, UITextFieldDelegate {
             let timeElapsed = Date().timeIntervalSince(defaults.object(forKey: "Date") as! Date)
             //print("Time elapsed:\(timeElapsed)")
             if(timeElapsed < 600.00 && (defaults.double(forKey: "Bill")) > 0.0){
-                billBoxLabel.text = String((defaults.double(forKey: "Bill")))
+                billBoxLabel.text = String(Int((defaults.double(forKey: "Bill"))))
+                if(!(self.billBoxLabel.text?.isEmpty)!){
+                    self.moveLabelUp()
+                }
             }
         }
-        //if(timeElapsed < 600){
-            
-        //}
         // Do any additional setup after loading the view, typically from a nib.
         tipPercentLabel.selectedSegmentIndex = defaults.integer(forKey: "defaultVal")
+        billBoxLabel.placeholder = Locale.current.currencySymbol
         }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
        tipPercentLabel.selectedSegmentIndex = defaults.integer(forKey: "defaultVal")
-       // self.mainView.alpha = 1
-        //self.displayView.alpha = 1
-        //self.tipPercentLabel.alpha = 1
-        if(defaults.integer(forKey: "Visited") == 0 || (self.billBoxLabel.text?.isEmpty)!){
-            self.displayView.alpha = 0
-            self.tipPercentLabel.alpha = 0
-        } else {
-            if(defaults.integer(forKey: "Visited") == 27){
-                self.displayView.alpha = 1
-                self.tipPercentLabel.alpha = 1
-            }
+            if(defaults.integer(forKey: "Visited") == 0 || (self.billBoxLabel.text?.isEmpty)!){
+                self.displayView.alpha = 0
+                self.tipPercentLabel.alpha = 0
+            } else {
+                if(defaults.integer(forKey: "Visited") == 27){
+                    self.displayView.alpha = 1
+                    self.tipPercentLabel.alpha = 1
+                    }
+             }
         }
-    }
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.calcTip()
@@ -87,17 +84,17 @@ class ViewController: UIViewController, UITextFieldDelegate {
         if(self.tipPercentLabel.selectedSegmentIndex == 3){
             
             let alertController = UIAlertController(title: "Custom tip", message: "Please Enter tip %", preferredStyle: UIAlertControllerStyle.alert)
-            alertController.addTextField { (textField : UITextField) -> Void in
+                alertController.addTextField { (textField : UITextField) -> Void in
                 textField.keyboardType = .decimalPad
                 textField.placeholder = "$"
                 textField.addTarget(self, action: #selector(self.alertTextFieldDidChange), for: UIControlEvents.editingChanged)
-            }
+                }
             
             let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel) { (result : UIAlertAction) -> Void in
             }
             let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default) { (result : UIAlertAction) -> Void in
             }
-            
+            okAction.isEnabled = false
             alertController.addAction(cancelAction)
             alertController.addAction(okAction)
             self.present(alertController, animated: true, completion: nil)
@@ -107,58 +104,62 @@ class ViewController: UIViewController, UITextFieldDelegate {
         let bill = Double(billBoxLabel.text!) ?? 0
         defaults.set(bill, forKey: "Bill")
         defaults.set(Date(), forKey: "Date")
-        numberFormatter.numberStyle = .currency
-        numberFormatter.locale = Locale.current
-        numberFormatter.maximumFractionDigits = 3
-        //numberFormatter.roundingMode = .down
         let tip = bill * ((self.customTip>0 && self.tipPercentLabel.selectedSegmentIndex == 3) ? (self.customTip) : (tipPercent[tipPercentLabel.selectedSegmentIndex]))
         let total = tip + bill
-        tipLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? (numberFormatter.string(from: NSNumber(value: tip))!) : "$0.00"
-        totalLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? (numberFormatter.string(from: NSNumber(value: total))!) : "$0.00"
-      //  tipLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? String(format: "$%.2f", tip) : "$0.00"
-      //  totalLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? String(format: "$%.2f", total) : "$0.00"
-       
+        tipLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? (self.retNumberFormatter().string(from: NSNumber(value: tip))!) : "$0.00"
+        totalLabel.text = (self.tipPercentLabel.selectedSegmentIndex != 3) ? (self.retNumberFormatter().string(from: NSNumber(value: total))!) : "$0.00"
+        
         UIView.animate(withDuration: 0.2, animations: {
             // This causes first view to fade in and second view to fade out
             if(!(self.billBoxLabel.text?.isEmpty)!){
-                if(self.movedDown){
-                    self.billBoxLabel.frame.origin.y = self.billBoxLabel.frame.origin.y - 100
-                    self.displayView.alpha = 1
-                    self.tipPercentLabel.alpha = 1
-                    self.movedDown = false
-                    self.movedUp = true}
+                    self.moveLabelUp()
                 } else {
-                    if(self.movedUp && self.firstVisit){
-                        self.billBoxLabel.frame.origin.y = self.billBoxLabel.frame.origin.y + 100
-                        self.displayView.alpha = 0
-                        self.tipPercentLabel.alpha = 0
-                        self.movedUp = false
-                        self.movedDown = true
-                    }
+                    self.moveLabelDown()
                 }
-            
             })
         firstVisit = true
         
     }
     
     func alertTextFieldDidChange(sender : UITextField){
-        
         let alertV = self.presentedViewController as? UIAlertController
-        let login = (alertV!.textFields?.first)! as UITextField
+        let customTip = (alertV!.textFields?.first)! as UITextField
         let okAction = alertV!.actions.last! as UIAlertAction
-        okAction.isEnabled = (login.text?.characters.count)! > 1
-        self.customTip = 0.01 * Double(login.text!)!
+        okAction.isEnabled = (customTip.text?.characters.count)! > 0
+        self.customTip = (okAction.isEnabled) ? (0.01 * Double(customTip.text!)!) : 0.0
         let bill = Double(billBoxLabel.text!) ?? 0
         let tip = bill * (self.customTip)
         let total = tip + bill
+        tipLabel.text = self.retNumberFormatter().string(from: NSNumber(value: tip))!
+        totalLabel.text = self.retNumberFormatter().string(from: NSNumber(value: total))!
+        
+    }
+    
+    func retNumberFormatter() -> NumberFormatter {
         numberFormatter.numberStyle = .currency
-        //numberFormatter.roundingMode = .down
         numberFormatter.maximumFractionDigits = 3
         numberFormatter.locale = Locale.current
-        tipLabel.text = numberFormatter.string(from: NSNumber(value: tip))!
-        totalLabel.text = numberFormatter.string(from: NSNumber(value: total))!
-        
+        return numberFormatter
+    }
+    
+    func moveLabelDown(){
+        if(self.movedUp && self.firstVisit){
+            self.billBoxLabel.frame.origin.y = self.billBoxLabel.frame.origin.y + 100
+            self.displayView.alpha = 0
+            self.tipPercentLabel.alpha = 0
+            self.movedUp = false
+            self.movedDown = true
+        }
+    }
+    
+    func moveLabelUp(){
+        if(self.movedDown){
+            self.billBoxLabel.frame.origin.y = self.billBoxLabel.frame.origin.y - 100
+            self.displayView.alpha = 1
+            self.tipPercentLabel.alpha = 1
+            self.movedDown = false
+            self.movedUp = true
+        }
     }
     
 }
