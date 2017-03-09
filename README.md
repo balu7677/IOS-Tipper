@@ -23,9 +23,12 @@ The following **optional** features are implemented:
 The following **additional** features are implemented:
 
 - [X] List anything else that you can get done to improve the app functionality!
--> NOTE: Additional features: 
-1) Added a custom tip option where an alert pops up and user can enter a custom tip amount and the result will be displayed. The 'OK' action button is enabled only when there is a valid input.
-2) The placeholder in the main bill text field changes based on the location. For ex. $ to £ if the location changes from US to UK
+ 
+ NOTE: Additional features: 
+
+    1) Added a custom tip option where an alert pops up and user can enter a custom tip amount and the result will be displayed. The 'OK'         action button in the alert box is enabled only when there is a valid input.
+
+    2) The placeholder in the main bill text field changes based on the location. For ex. $ to £ if the location changes from US to UK
 
 ## Video Walkthrough 
 
